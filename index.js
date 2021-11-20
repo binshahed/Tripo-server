@@ -20,13 +20,29 @@ const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-console.log(uri)
 
 async function run () {
   try {
     await client.connect()
     const database = client.db('tripoDb')
     const packagesCollection = database.collection('packages-collection')
+    const bookingCollection = database.collection('booking-collection')
+
+    // post package from user
+    app.post('/booking', async (req, res) => {
+      const booking = req.body
+      const result = await bookingCollection.insertOne(booking)
+      console.log('hitted', booking)
+      res.json(result)
+    })
+
+    //// get package from db
+    app.get('/booking', async (req, res) => {
+      const cursor = bookingCollection.find({})
+      const packages = await cursor.toArray()
+      res.send(packages)
+    })
+
     // create a document to insert
     app.get('/packages', async (req, res) => {
       const cursor = packagesCollection.find({})
