@@ -1,6 +1,8 @@
 const express = require('express')
 const app = express()
 const { MongoClient } = require('mongodb')
+const ObjectId = require('mongodb').ObjectId
+
 const cors = require('cors')
 
 require('dotenv').config()
@@ -43,11 +45,44 @@ async function run () {
       res.send(packages)
     })
 
-    // create a document to insert
+    //// delete my package from db
+    app.delete('/booking/:id', async (req, res) => {
+      const id = req.params.id
+      const query = { _id: ObjectId(id) }
+      const result = await bookingCollection.deleteOne(query)
+      res.json(result)
+    })
+    //// Update status
+    app.put('/booking/:id', async (req, res) => {
+      const id = req.params.id
+      const updatedStatus = req.body
+      const filter = { _id: ObjectId(id) }
+      const options = { upsert: true }
+      const updateDoc = {
+        $set: {
+          status: updatedStatus.status
+        }
+      }
+      const result = await bookingCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      )
+
+      res.json(result)
+    })
+
+    // get package
     app.get('/packages', async (req, res) => {
       const cursor = packagesCollection.find({})
       const packages = await cursor.toArray()
       res.send(packages)
+    })
+    // post package from user
+    app.post('/packages', async (req, res) => {
+      const booking = req.body
+      const result = await packagesCollection.insertOne(booking)
+      res.json(result)
     })
   } finally {
     //   await client.close();
